@@ -1,10 +1,32 @@
 import os
+import socket
+import getpass
 from netmiko import ConnectHandler
 
+def resolve_fqdn(ftd_address):
+    try:
+        ip_address = socket.gethostbyname(ftd_address)
+        return ip_address
+    except socket.gaierror:
+        return None
+
 def get_ftd_credentials():
-    ftd_ip = input("Enter the FTD IP address: ")
+    ftd_address = input("Enter FTD IP or FQDN: ")
+
+    if not resolve_fqdn(ftd_address):
+        print("Resolving...")
+        ftd_ip = resolve_fqdn(ftd_address)
+        if ftd_ip:
+            print(f"{ftd_address} == {ftd_ip}")
+        else:
+            print("Unable to resolve FQDN. Provide a valid IP address.")
+            exit(1)
+    else:
+        ftd_ip = ftd_address
+    
+    #ftd_ip = input("Enter the FTD IP address: ")
     username = input("Enter your username: ")
-    password = input("Enter your password: ")
+    password = getpass.getpass("Enter your password: ")
     return ftd_ip, username, password
 
 def export_hitless_rules(ftd_ip, username, password, output_file):
